@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Elwise.Api/Elwise.Api.csproj" />
+    <Project Path="src/Elwise.App/Elwise.App.csproj" />
+    <Project Path="src/Elwise.Core/Elwise.Core.csproj" />
+    <Project Path="src/Elwise.Infrastructure/Elwise.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Elwise.Tests/Elwise.Tests.csproj" />
+  </Folder>
+</Solution>
