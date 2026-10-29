@@ -42,8 +42,8 @@ public static class CheapestWindowFinder
         if (prices.Count < intervalCount)
         {
             throw new ArgumentException(
-                nameof(prices),
-                "Not enough price points for the specified duration.");
+                message: "Not enough price points for the specified duration.",
+                paramName: nameof(prices));
         }
 
         decimal cheapestAveragePrice = decimal.MaxValue;
