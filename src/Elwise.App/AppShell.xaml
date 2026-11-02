@@ -7,7 +7,7 @@
     Title="Elwise.App">
 
     <ShellContent
-        Title="Home"
+        Title="Elpriser i dag"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 
