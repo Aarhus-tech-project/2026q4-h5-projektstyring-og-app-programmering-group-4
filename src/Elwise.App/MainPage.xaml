@@ -5,7 +5,12 @@
              x:Class="Elwise.App.MainPage"
              x:DataType="vm:PricesViewModel">
 
-    <CollectionView ItemsSource="{Binding Prices}" Margin="16,8">
+    <CollectionView ItemsSource="{Binding Days}" IsGrouped="True" Margin="16,8">
+        <CollectionView.GroupHeaderTemplate>
+            <DataTemplate x:DataType="vm:PriceGroup">
+                <Label Text="{Binding Title}" FontSize="20" FontAttributes="Bold" Padding="0,16,0,8" />
+            </DataTemplate>
+        </CollectionView.GroupHeaderTemplate>
         <CollectionView.ItemTemplate>
             <DataTemplate x:DataType="vm:PriceRow">
                 <Grid ColumnDefinitions="*,Auto" Padding="0,6">
