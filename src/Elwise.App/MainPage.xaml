@@ -5,20 +5,31 @@
              x:Class="Elwise.App.MainPage"
              x:DataType="vm:PricesViewModel">
 
-    <CollectionView ItemsSource="{Binding Days}" IsGrouped="True" Margin="16,8">
-        <CollectionView.GroupHeaderTemplate>
-            <DataTemplate x:DataType="vm:PriceGroup">
-                <Label Text="{Binding Title}" FontSize="20" FontAttributes="Bold" Padding="0,16,0,8" />
-            </DataTemplate>
-        </CollectionView.GroupHeaderTemplate>
-        <CollectionView.ItemTemplate>
-            <DataTemplate x:DataType="vm:PriceRow">
-                <Grid ColumnDefinitions="*,Auto" Padding="0,6">
-                    <Label Text="{Binding Time}" />
-                    <Label Grid.Column="1" Text="{Binding Price}" />
-                </Grid>
-            </DataTemplate>
-        </CollectionView.ItemTemplate>
-    </CollectionView>
+    <Grid RowDefinitions="Auto,*" Padding="16,8">
+
+        <Border Padding="16" Margin="0,0,0,8" StrokeShape="RoundRectangle 12">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Billigste tid til opvasken (2 timer)" FontAttributes="Bold" />
+                <Label Text="{Binding CheapestText}" FontSize="18" />
+            </VerticalStackLayout>
+        </Border>
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Days}" IsGrouped="True">
+            <CollectionView.GroupHeaderTemplate>
+                <DataTemplate x:DataType="vm:PriceGroup">
+                    <Label Text="{Binding Title}" FontSize="20" FontAttributes="Bold" Padding="0,16,0,8" />
+                </DataTemplate>
+            </CollectionView.GroupHeaderTemplate>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:PriceRow">
+                    <Grid ColumnDefinitions="*,Auto" Padding="0,6">
+                        <Label Text="{Binding Time}" />
+                        <Label Grid.Column="1" Text="{Binding Price}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
 
 </ContentPage>
