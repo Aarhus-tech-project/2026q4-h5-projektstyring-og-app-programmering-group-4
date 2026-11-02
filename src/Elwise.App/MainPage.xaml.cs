@@ -1,23 +1,29 @@
-﻿namespace Elwise.App;
+﻿using Elwise.App.ViewModels;
+
+namespace Elwise.App;
 
 public partial class MainPage : ContentPage
 {
-	int count = 0;
+    private readonly PricesViewModel _viewModel;
 
-	public MainPage()
-	{
-		InitializeComponent();
-	}
+    public MainPage(PricesViewModel viewModel)
+    {
+        InitializeComponent();
+        _viewModel = viewModel;
+        BindingContext = viewModel;
+    }
 
-	private void OnCounterClicked(object? sender, EventArgs e)
-	{
-		count++;
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
 
-		if (count == 1)
-			CounterBtn.Text = $"Clicked {count} time";
-		else
-			CounterBtn.Text = $"Clicked {count} times";
-
-		SemanticScreenReader.Announce(CounterBtn.Text);
-	}
+        try
+        {
+            await _viewModel.LoadAsync();
+        }
+        catch (HttpRequestException)
+        {
+            await DisplayAlertAsync("Ingen forbindelse", "Priserne kunne ikke hentes. Prøv igen senere.", "OK");
+        }
+    }
 }
