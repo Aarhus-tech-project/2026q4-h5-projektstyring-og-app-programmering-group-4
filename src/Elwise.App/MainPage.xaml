@@ -9,7 +9,7 @@
 
         <Border Padding="16" Margin="0,0,0,8" StrokeShape="RoundRectangle 12">
             <VerticalStackLayout Spacing="4">
-                <Label Text="Billigste tid til opvasken (2 timer)" FontAttributes="Bold" />
+                <Label Text="Billigste tid til opvasken" FontAttributes="Bold" />
                 <Label Text="{Binding CheapestText}" FontSize="18" />
             </VerticalStackLayout>
         </Border>

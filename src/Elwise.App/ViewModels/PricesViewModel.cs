@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using Elwise.App.Settings;
 using Elwise.Core.Prices;
 using Elwise.Core.Scheduling;
 using Elwise.Core.Time;
@@ -13,15 +14,15 @@ namespace Elwise.App.ViewModels;
 public sealed class PricesViewModel : INotifyPropertyChanged
 {
     private static readonly CultureInfo Danish = CultureInfo.GetCultureInfo("da-DK");
-    private static readonly TimeSpan Duration = TimeSpan.FromHours(2);
-    private static readonly AllowedHours AllDay = new(0, 24);
 
     private readonly IPriceSource _priceSource;
+    private readonly AppSettings _settings;
     private string _cheapestText = "";
 
-    public PricesViewModel(IPriceSource priceSource)
+    public PricesViewModel(IPriceSource priceSource, AppSettings settings)
     {
         _priceSource = priceSource;
+        _settings = settings;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -42,36 +43,41 @@ public sealed class PricesViewModel : INotifyPropertyChanged
     {
         DateOnly today = DateOnly.FromDateTime(DanishTime.FromUtc(DateTimeOffset.UtcNow).DateTime);
         DateOnly tomorrow = today.AddDays(1);
+        PriceArea area = _settings.Area;
 
-        IReadOnlyList<PricePoint> todayPrices = await _priceSource.GetPricesAsync(PriceArea.DK1, today);
-        IReadOnlyList<PricePoint> tomorrowPrices = await _priceSource.GetPricesAsync(PriceArea.DK1, tomorrow);
+        IReadOnlyList<PricePoint> todayPrices = await _priceSource.GetPricesAsync(area, today);
+        IReadOnlyList<PricePoint> tomorrowPrices = await _priceSource.GetPricesAsync(area, tomorrow);
 
         Days.Clear();
-        Days.Add(new PriceGroup("I dag", ToRows(todayPrices)));
+        Days.Add(new PriceGroup($"I dag · {area}", ToRows(todayPrices)));
 
         if (tomorrowPrices.Count > 0)
         {
-            Days.Add(new PriceGroup("I morgen", ToRows(tomorrowPrices)));
+            Days.Add(new PriceGroup($"I morgen · {area}", ToRows(tomorrowPrices)));
         }
 
         var allPrices = new List<PricePoint>(todayPrices);
         allPrices.AddRange(tomorrowPrices);
 
-        CheapestText = DescribeCheapest(allPrices, today);
+        CheapestText = DescribeCheapest(allPrices, today, _settings.Duration, _settings.AllowedHours);
     }
 
-    private static string DescribeCheapest(IReadOnlyList<PricePoint> prices, DateOnly today)
+    private static string DescribeCheapest(
+        IReadOnlyList<PricePoint> prices,
+        DateOnly today,
+        TimeSpan duration,
+        AllowedHours allowedHours)
     {
         if (prices.Count == 0)
         {
             return "Ingen priser endnu.";
         }
 
-        PriceWindow? cheapest = CheapestWindowFinder.FindCheapest(prices, Duration, AllDay, DateTimeOffset.UtcNow);
+        PriceWindow? cheapest = CheapestWindowFinder.FindCheapest(prices, duration, allowedHours, DateTimeOffset.UtcNow);
 
         if (cheapest is null)
         {
-            return "Intet tidsrum passer til reglerne.";
+            return "Intet tidsrum passer til dine indstillinger.";
         }
 
         DateTimeOffset start = DanishTime.FromUtc(cheapest.Start);

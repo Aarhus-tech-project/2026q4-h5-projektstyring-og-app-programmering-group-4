@@ -2,6 +2,7 @@
 using Elwise.App.ViewModels;
 using Elwise.Core.Prices;
 using Elwise.Infrastructure.EnergiDataService;
+using Elwise.App.Settings;
 
 namespace Elwise.App;
 
@@ -22,6 +23,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<IPriceSource, EnergiDataServiceClient>();
         builder.Services.AddTransient<PricesViewModel>();
         builder.Services.AddTransient<MainPage>();
+        builder.Services.AddSingleton(Preferences.Default);
+        builder.Services.AddSingleton<AppSettings>();
+        builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<SettingsPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

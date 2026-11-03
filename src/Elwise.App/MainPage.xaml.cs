@@ -21,8 +21,9 @@ public partial class MainPage : ContentPage
         {
             await _viewModel.LoadAsync();
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
+            System.Diagnostics.Debug.WriteLine($"Price fetch failed: {ex.Message}");
             await DisplayAlertAsync("Ingen forbindelse", "Priserne kunne ikke hentes. Prøv igen senere.", "OK");
         }
     }
