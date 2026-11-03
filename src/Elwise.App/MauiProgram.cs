@@ -20,7 +20,10 @@ public static class MauiProgram
 			});
 
         builder.Services.AddSingleton<HttpClient>();
-        builder.Services.AddSingleton<IPriceSource, EnergiDataServiceClient>();
+        builder.Services.AddSingleton<EnergiDataServiceClient>();
+        builder.Services.AddSingleton<IPriceSource>(services => new CachedPriceSource(
+            services.GetRequiredService<EnergiDataServiceClient>(),
+            TimeProvider.System));
         builder.Services.AddTransient<PricesViewModel>();
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddSingleton(Preferences.Default);

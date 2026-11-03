@@ -46,7 +46,7 @@ public sealed class PricesViewModel : INotifyPropertyChanged
         PriceArea area = _settings.Area;
 
         IReadOnlyList<PricePoint> todayPrices = await _priceSource.GetPricesAsync(area, today);
-        IReadOnlyList<PricePoint> tomorrowPrices = await _priceSource.GetPricesAsync(area, tomorrow);
+        IReadOnlyList<PricePoint> tomorrowPrices = await GetTomorrowPricesAsync(area, tomorrow);
 
         Days.Clear();
         Days.Add(new PriceGroup($"I dag · {area}", ToRows(todayPrices)));
@@ -61,7 +61,18 @@ public sealed class PricesViewModel : INotifyPropertyChanged
 
         CheapestText = DescribeCheapest(allPrices, today, _settings.Duration, _settings.AllowedHours);
     }
-
+    private async Task<IReadOnlyList<PricePoint>> GetTomorrowPricesAsync(PriceArea area, DateOnly tomorrow)
+    {
+        try
+        {
+            return await _priceSource.GetPricesAsync(area, tomorrow);
+        }
+        catch (HttpRequestException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Tomorrow's prices failed: {ex.Message}");
+            return [];
+        }
+    }
     private static string DescribeCheapest(
         IReadOnlyList<PricePoint> prices,
         DateOnly today,
