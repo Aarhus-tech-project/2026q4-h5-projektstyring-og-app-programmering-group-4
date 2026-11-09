@@ -3,6 +3,7 @@ using Elwise.App.ViewModels;
 using Elwise.Core.Prices;
 using Elwise.Infrastructure.EnergiDataService;
 using Elwise.App.Settings;
+using Plugin.LocalNotification;
 
 namespace Elwise.App;
 
@@ -11,10 +12,11 @@ public static class MauiProgram
 	public static MauiApp CreateMauiApp()
 	{
 		var builder = MauiApp.CreateBuilder();
-		builder
-			.UseMauiApp<App>()
-			.ConfigureFonts(fonts =>
-			{
+        builder
+            .UseMauiApp<App>()
+            .UseLocalNotification()
+            .ConfigureFonts(fonts =>
+            {
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
