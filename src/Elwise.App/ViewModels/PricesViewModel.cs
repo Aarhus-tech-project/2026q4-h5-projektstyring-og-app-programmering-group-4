@@ -5,6 +5,8 @@ using Elwise.App.Settings;
 using Elwise.Core.Prices;
 using Elwise.Core.Scheduling;
 using Elwise.Core.Time;
+using Plugin.LocalNotification;
+using Plugin.LocalNotification.Core.Models;
 
 namespace Elwise.App.ViewModels;
 
@@ -13,21 +15,26 @@ namespace Elwise.App.ViewModels;
 /// </summary>
 public sealed class PricesViewModel : INotifyPropertyChanged
 {
+    private const int ReminderId = 1;
     private static readonly CultureInfo Danish = CultureInfo.GetCultureInfo("da-DK");
 
     private readonly IPriceSource _priceSource;
     private readonly AppSettings _settings;
     private string _cheapestText = "";
+    private PriceWindow? _cheapest;
+    private string _reminderText = "";
 
     public PricesViewModel(IPriceSource priceSource, AppSettings settings)
     {
         _priceSource = priceSource;
         _settings = settings;
+        RemindCommand = new Command(async () => await RemindAsync(), () => _cheapest is not null);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ObservableCollection<PriceGroup> Days { get; } = new();
+    public Command RemindCommand { get; }
 
     public string CheapestText
     {
@@ -36,6 +43,16 @@ public sealed class PricesViewModel : INotifyPropertyChanged
         {
             _cheapestText = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CheapestText)));
+        }
+    }
+
+    public string ReminderText
+    {
+        get => _reminderText;
+        private set
+        {
+            _reminderText = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ReminderText)));
         }
     }
 
@@ -59,7 +76,11 @@ public sealed class PricesViewModel : INotifyPropertyChanged
         var allPrices = new List<PricePoint>(todayPrices);
         allPrices.AddRange(tomorrowPrices);
 
-        CheapestText = DescribeCheapest(allPrices, today, _settings.Duration, _settings.AllowedHours);
+        _cheapest = allPrices.Count == 0
+            ? null
+            : CheapestWindowFinder.FindCheapest(allPrices, _settings.Duration, _settings.AllowedHours, DateTimeOffset.UtcNow);
+        CheapestText = DescribeCheapest(_cheapest, today);
+        RemindCommand.ChangeCanExecute();
     }
     private async Task<IReadOnlyList<PricePoint>> GetTomorrowPricesAsync(PriceArea area, DateOnly tomorrow)
     {
@@ -73,21 +94,49 @@ public sealed class PricesViewModel : INotifyPropertyChanged
             return [];
         }
     }
-    private static string DescribeCheapest(
-        IReadOnlyList<PricePoint> prices,
-        DateOnly today,
-        TimeSpan duration,
-        AllowedHours allowedHours)
+
+    private async Task RemindAsync()
     {
-        if (prices.Count == 0)
+        PriceWindow? window = _cheapest;
+
+        if (window is null)
         {
-            return "Ingen priser endnu.";
+            return;
         }
 
-        PriceWindow? cheapest = CheapestWindowFinder.FindCheapest(prices, duration, allowedHours, DateTimeOffset.UtcNow);
-
-        if (cheapest is null)
+        try
         {
+            if (await LocalNotificationCenter.Current.AreNotificationsEnabled() == false)
+            {
+            await LocalNotificationCenter.Current.RequestNotificationPermission();
+        }
+
+        var reminder = new NotificationRequest
+        {
+            NotificationId = ReminderId,
+            Title = "Start opvasken nu",
+            Description = CheapestText,
+            Schedule =
+            {
+                NotifyTime = window.Start
+            }
+        };
+        await LocalNotificationCenter.Current.Show(reminder);
+
+        string time = DanishTime.FromUtc(window.Start).ToString("HH:mm", Danish);
+        ReminderText = $"Påmindelse sat til kl. {time}.";
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Reminder failed: {ex.Message}");
+            ReminderText = "Påmindelsen kunne ikke sættes på denne enhed.";
+        }
+    }
+
+    private static string DescribeCheapest(PriceWindow? cheapest, DateOnly today)
+    {
+        if (cheapest is null)
+        { 
             return "Intet tidsrum passer til dine indstillinger.";
         }
 
