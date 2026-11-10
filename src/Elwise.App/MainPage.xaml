@@ -11,6 +11,8 @@
             <VerticalStackLayout Spacing="4">
                 <Label Text="Billigste tid til opvasken" FontAttributes="Bold" />
                 <Label Text="{Binding CheapestText}" FontSize="18" />
+                <Button Text="Påmind mig, når det starter" Command="{Binding RemindCommand}" Margin="0,8,0,0" />
+                <Label Text="{Binding ReminderText}" FontSize="13" />
             </VerticalStackLayout>
         </Border>
 
