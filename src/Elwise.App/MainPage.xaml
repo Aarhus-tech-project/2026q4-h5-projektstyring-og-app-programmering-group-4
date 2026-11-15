@@ -18,6 +18,7 @@
                            FontFamily="TextBold"
                            FontSize="64"
                            Padding="8,0"
+                           Margin="-8,0,0,0"
                            HorizontalOptions="Start"
                            TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource Highlight}}"
                            BackgroundColor="{AppThemeBinding Light={StaticResource Highlight}, Dark={StaticResource PageBackgroundDark}}" />
@@ -38,7 +39,7 @@
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Prisen i dag og i morgen" Style="{StaticResource SectionTitle}" />
                     <GraphicsView x:Name="PriceChart" Drawable="{Binding Chart}" HeightRequest="180" />
-                    <Label Text="Det gule felt er den billigste tid. Den lodrette streg er nu, og kl. 17–21 er nedtonet."
+                    <Label Text="Det grønne felt er den billigste tid. Den lodrette streg er nu, og kl. 17–21 er nedtonet."
                            Style="{StaticResource MutedText}" />
                     <Label Text="{Binding PriceNoteText}" Style="{StaticResource MutedText}" FontSize="12" />
                 </VerticalStackLayout>

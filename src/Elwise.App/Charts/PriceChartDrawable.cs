@@ -8,7 +8,7 @@ using VerticalAlignment = Microsoft.Maui.Graphics.VerticalAlignment;
 namespace Elwise.App.Charts;
 
 /// <summary>
-/// Draws the 15-minute prices as thin bars. The cheapest window is marked in yellow,
+/// Draws the 15-minute prices as thin bars. The cheapest window is marked in green,
 /// the hours 17–21 are pale, past prices are faded and a line marks the current time.
 /// </summary>
 public sealed class PriceChartDrawable : IDrawable
