@@ -3,35 +3,78 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:Elwise.App.ViewModels"
              x:Class="Elwise.App.MainPage"
-             x:DataType="vm:PricesViewModel">
+             x:DataType="vm:PricesViewModel"
+             Title="Elwise">
 
-    <Grid RowDefinitions="Auto,*" Padding="16,8">
+    <CollectionView ItemsSource="{Binding Days}" IsGrouped="True">
 
-        <Border Padding="16" Margin="0,0,0,8" StrokeShape="RoundRectangle 12">
-            <VerticalStackLayout Spacing="4">
-                <Label Text="Billigste tid til opvasken" FontAttributes="Bold" />
-                <Label Text="{Binding CheapestText}" FontSize="18" />
-                <Button Text="Påmind mig, når det starter" Command="{Binding RemindCommand}" Margin="0,8,0,0" />
-                <Label Text="{Binding ReminderText}" FontSize="13" />
+        <CollectionView.Header>
+            <VerticalStackLayout Padding="24,8,24,0" Spacing="32">
+
+                <!-- When to start -->
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Start opvasken" Style="{StaticResource MutedText}" FontSize="17" />
+                    <Label Text="{Binding StartTimeText}"
+                           FontFamily="TextBold"
+                           FontSize="64"
+                           Padding="8,0"
+                           HorizontalOptions="Start"
+                           TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource Highlight}}"
+                           BackgroundColor="{AppThemeBinding Light={StaticResource Highlight}, Dark={StaticResource PageBackgroundDark}}" />
+                    <Label Text="{Binding StartWhenText}" FontSize="17" />
+                    <Label Text="{Binding DetailText}" Style="{StaticResource MutedText}" FontSize="15" />
+                    <Label Text="{Binding SavingsText}" IsVisible="{Binding HasSavings}" FontFamily="TextBold" FontSize="15" />
+                    <Button Text="{Binding RemindButtonText}"
+                            Command="{Binding RemindCommand}"
+                            FontFamily="TextBold"
+                            FontSize="16"
+                            CornerRadius="12"
+                            HeightRequest="52"
+                            Margin="0,16,0,0" />
+                    <Label Text="{Binding ReminderText}" Style="{StaticResource MutedText}" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- The chart -->
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Prisen i dag og i morgen" Style="{StaticResource SectionTitle}" />
+                    <GraphicsView x:Name="PriceChart" Drawable="{Binding Chart}" HeightRequest="180" />
+                    <Label Text="Det gule felt er den billigste tid. Den lodrette streg er nu, og kl. 17–21 er nedtonet."
+                           Style="{StaticResource MutedText}" />
+                    <Label Text="{Binding PriceNoteText}" Style="{StaticResource MutedText}" FontSize="12" />
+                </VerticalStackLayout>
+
+                <Label Text="Alle priser" Style="{StaticResource SectionTitle}" />
+
             </VerticalStackLayout>
-        </Border>
+        </CollectionView.Header>
 
-        <CollectionView Grid.Row="1" ItemsSource="{Binding Days}" IsGrouped="True">
-            <CollectionView.GroupHeaderTemplate>
-                <DataTemplate x:DataType="vm:PriceGroup">
-                    <Label Text="{Binding Title}" FontSize="20" FontAttributes="Bold" Padding="0,16,0,8" />
-                </DataTemplate>
-            </CollectionView.GroupHeaderTemplate>
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="vm:PriceRow">
-                    <Grid ColumnDefinitions="*,Auto" Padding="0,6">
+        <CollectionView.GroupHeaderTemplate>
+            <DataTemplate x:DataType="vm:PriceGroup">
+                <Label Text="{Binding Title}" FontFamily="TextBold" FontSize="15" Padding="24,20,24,8" />
+            </DataTemplate>
+        </CollectionView.GroupHeaderTemplate>
+
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="vm:PriceRow">
+                <VerticalStackLayout>
+                    <Grid ColumnDefinitions="*,Auto" Padding="24,10">
+                        <Grid.Triggers>
+                            <DataTrigger TargetType="Grid" Binding="{Binding IsInWindow}" Value="True">
+                                <Setter Property="BackgroundColor" Value="{StaticResource HighlightSoft}" />
+                            </DataTrigger>
+                        </Grid.Triggers>
                         <Label Text="{Binding Time}" />
                         <Label Grid.Column="1" Text="{Binding Price}" />
                     </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                    <BoxView Style="{StaticResource Divider}" Margin="24,0" />
+                </VerticalStackLayout>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
 
-    </Grid>
+        <CollectionView.Footer>
+            <ContentView HeightRequest="32" />
+        </CollectionView.Footer>
+
+    </CollectionView>
 
 </ContentPage>

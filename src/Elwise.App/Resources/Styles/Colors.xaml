@@ -34,8 +34,8 @@
     <Color x:Key="MutedDark">#9A9A9A</Color>
     <Color x:Key="Line">#EBEBEB</Color>
     <Color x:Key="LineDark">#262626</Color>
-    <Color x:Key="Highlight">#FFD43B</Color>
-    <Color x:Key="HighlightSoft">#40FFD43B</Color>
+    <Color x:Key="Highlight">#7BE0A8</Color>
+    <Color x:Key="HighlightSoft">#407BE0A8</Color>
 
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
