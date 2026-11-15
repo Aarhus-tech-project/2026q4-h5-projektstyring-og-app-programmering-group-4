@@ -21,10 +21,11 @@ public sealed class EnergiDataServiceClient : IPriceSource
     /// <inheritdoc />
     public async Task<IReadOnlyList<PricePoint>> GetPricesAsync(
         PriceArea area,
-        DateOnly day,
+        DateOnly firstDay,
+        int dayCount,
         CancellationToken cancellationToken = default)
     {
-        string url = BuildUrl(area, day);
+        string url = BuildUrl(area, firstDay, dayCount);
 
         DayAheadPricesResponse? response =
             await _httpClient.GetFromJsonAsync<DayAheadPricesResponse>(url, cancellationToken);
@@ -44,10 +45,10 @@ public sealed class EnergiDataServiceClient : IPriceSource
         return prices;
     }
 
-    private static string BuildUrl(PriceArea area, DateOnly day)
+    private static string BuildUrl(PriceArea area, DateOnly firstDay, int dayCount)
     {
-        string start = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        string end = day.AddDays(1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        string start = firstDay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        string end = firstDay.AddDays(dayCount).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         string filter = Uri.EscapeDataString("{\"PriceArea\":[\"" + area + "\"]}");
 
         return $"{DatasetUrl}?start={start}&end={end}&filter={filter}&sort=TimeUTC&limit=0";
