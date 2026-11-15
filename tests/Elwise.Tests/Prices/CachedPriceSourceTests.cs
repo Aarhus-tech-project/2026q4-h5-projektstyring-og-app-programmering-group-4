@@ -8,36 +8,51 @@ public class CachedPriceSourceTests
     private static readonly DateOnly Day = new(2026, 11, 3);
 
     [Fact]
-    public async Task GetPricesAsync_SameDayTwice_FetchesOnce()
+    public async Task GetPricesAsync_SameRequestTwice_FetchesOnce()
     {
         // Arrange
         var inner = new CountingPriceSource(OnePrice());
         var cached = new CachedPriceSource(inner, new FakeTimeProvider());
 
         // Act
-        await cached.GetPricesAsync(PriceArea.DK1, Day);
-        await cached.GetPricesAsync(PriceArea.DK1, Day);
+        await cached.GetPricesAsync(PriceArea.DK1, Day, 2);
+        await cached.GetPricesAsync(PriceArea.DK1, Day, 2);
 
         // Assert
         Assert.Equal(1, inner.Calls);
     }
 
     [Fact]
-    public async Task GetPricesAsync_EmptyResult_FetchesAgainAfterTenMinutes()
+    public async Task GetPricesAsync_FetchesAgainAfterTenMinutes()
     {
         // Arrange
-        var inner = new CountingPriceSource([]);
+        var inner = new CountingPriceSource(OnePrice());
         var clock = new FakeTimeProvider();
         var cached = new CachedPriceSource(inner, clock);
 
         // Act: fetch at 0, 5 and 11 minutes
-        await cached.GetPricesAsync(PriceArea.DK1, Day);
+        await cached.GetPricesAsync(PriceArea.DK1, Day, 2);
         clock.UtcNow = clock.UtcNow.AddMinutes(5);
-        await cached.GetPricesAsync(PriceArea.DK1, Day);
+        await cached.GetPricesAsync(PriceArea.DK1, Day, 2);
         clock.UtcNow = clock.UtcNow.AddMinutes(6);
-        await cached.GetPricesAsync(PriceArea.DK1, Day);
+        await cached.GetPricesAsync(PriceArea.DK1, Day, 2);
 
         // Assert: fetched at 0 and 11 minutes, not at 5 minutes
+        Assert.Equal(2, inner.Calls);
+    }
+
+    [Fact]
+    public async Task GetPricesAsync_DifferentDayCount_FetchesAgain()
+    {
+        // Arrange
+        var inner = new CountingPriceSource(OnePrice());
+        var cached = new CachedPriceSource(inner, new FakeTimeProvider());
+
+        // Act
+        await cached.GetPricesAsync(PriceArea.DK1, Day, 1);
+        await cached.GetPricesAsync(PriceArea.DK1, Day, 2);
+
+        // Assert
         Assert.Equal(2, inner.Calls);
     }
 
@@ -57,7 +72,8 @@ public class CachedPriceSourceTests
 
         public Task<IReadOnlyList<PricePoint>> GetPricesAsync(
             PriceArea area,
-            DateOnly day,
+            DateOnly firstDay,
+            int dayCount,
             CancellationToken cancellationToken = default)
         {
             Calls++;

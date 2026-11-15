@@ -59,11 +59,26 @@ public sealed class PricesViewModel : INotifyPropertyChanged
     public async Task LoadAsync()
     {
         DateOnly today = DateOnly.FromDateTime(DanishTime.FromUtc(DateTimeOffset.UtcNow).DateTime);
-        DateOnly tomorrow = today.AddDays(1);
         PriceArea area = _settings.Area;
 
-        IReadOnlyList<PricePoint> todayPrices = await _priceSource.GetPricesAsync(area, today);
-        IReadOnlyList<PricePoint> tomorrowPrices = await GetTomorrowPricesAsync(area, tomorrow);
+        IReadOnlyList<PricePoint> prices = await _priceSource.GetPricesAsync(area, today, 2);
+
+        var todayPrices = new List<PricePoint>();
+        var tomorrowPrices = new List<PricePoint>();
+
+        foreach (PricePoint price in prices)
+        {
+            DateOnly day = DateOnly.FromDateTime(DanishTime.FromUtc(price.Start).DateTime);
+
+            if (day == today)
+            {
+                todayPrices.Add(price);
+            }
+            else
+            {
+                tomorrowPrices.Add(price);
+            }
+        }
 
         Days.Clear();
         Days.Add(new PriceGroup($"I dag · {area}", ToRows(todayPrices)));
@@ -73,26 +88,11 @@ public sealed class PricesViewModel : INotifyPropertyChanged
             Days.Add(new PriceGroup($"I morgen · {area}", ToRows(tomorrowPrices)));
         }
 
-        var allPrices = new List<PricePoint>(todayPrices);
-        allPrices.AddRange(tomorrowPrices);
-
-        _cheapest = allPrices.Count == 0
+        _cheapest = prices.Count == 0
             ? null
-            : CheapestWindowFinder.FindCheapest(allPrices, _settings.Duration, _settings.AllowedHours, DateTimeOffset.UtcNow);
+            : CheapestWindowFinder.FindCheapest(prices, _settings.Duration, _settings.AllowedHours, DateTimeOffset.UtcNow);
         CheapestText = DescribeCheapest(_cheapest, today);
         RemindCommand.ChangeCanExecute();
-    }
-    private async Task<IReadOnlyList<PricePoint>> GetTomorrowPricesAsync(PriceArea area, DateOnly tomorrow)
-    {
-        try
-        {
-            return await _priceSource.GetPricesAsync(area, tomorrow);
-        }
-        catch (HttpRequestException ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Tomorrow's prices failed: {ex.Message}");
-            return [];
-        }
     }
 
     private async Task RemindAsync()

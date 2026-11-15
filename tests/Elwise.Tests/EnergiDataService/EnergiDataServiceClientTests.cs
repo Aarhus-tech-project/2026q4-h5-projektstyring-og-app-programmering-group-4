@@ -26,8 +26,7 @@ public class EnergiDataServiceClientTests
         var client = new EnergiDataServiceClient(new HttpClient(handler));
 
         // Act 
-        var prices = await client.GetPricesAsync(PriceArea.DK1, new DateOnly(2026, 11, 1));
-
+        var prices = await client.GetPricesAsync(PriceArea.DK1, new DateOnly(2026, 11, 1), 1);
         // Assert
         Assert.Equal(2, prices.Count);
         Assert.Equal(new DateTimeOffset(2026, 10, 31, 23, 0, 0, TimeSpan.Zero), prices[0].Start);
@@ -37,19 +36,19 @@ public class EnergiDataServiceClientTests
     }
 
     [Fact]
-    public async Task GetPricesAsync_AsksForTheRightDayAndArea()
+    public async Task GetPricesAsync_AsksForTheRightDaysAndArea()
     {
                 // Arrange
         var handler = new FakeHandler(Json);
         var client = new EnergiDataServiceClient(new HttpClient(handler));
 
         // Act
-        await client.GetPricesAsync(PriceArea.DK1, new DateOnly(2026, 11, 1));
+        await client.GetPricesAsync(PriceArea.DK1, new DateOnly(2026, 11, 1), 2);
 
         // Assert
         Assert.NotNull(handler.RequestUri);
         Assert.Equal(
-            """?start=2026-11-01&end=2026-11-02&filter={"PriceArea":["DK1"]}&sort=TimeUTC&limit=0""",
+            """?start=2026-11-01&end=2026-11-03&filter={"PriceArea":["DK1"]}&sort=TimeUTC&limit=0""",
             Uri.UnescapeDataString(handler.RequestUri.Query));
     }
 
