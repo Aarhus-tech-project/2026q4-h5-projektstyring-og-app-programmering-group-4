@@ -10,10 +10,12 @@
     <TabBar>
         <ShellContent
             Title="Priser"
+            Icon="tab_prices.png"
             ContentTemplate="{DataTemplate local:MainPage}"
             Route="MainPage" />
         <ShellContent
             Title="Indstillinger"
+            Icon="tab_settings.png"
             ContentTemplate="{DataTemplate local:SettingsPage}"
             Route="SettingsPage" />
     </TabBar>

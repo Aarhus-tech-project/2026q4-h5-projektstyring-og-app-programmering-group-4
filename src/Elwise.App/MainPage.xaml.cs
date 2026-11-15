@@ -20,8 +20,9 @@ public partial class MainPage : ContentPage
         try
         {
             await _viewModel.LoadAsync();
+            PriceChart.Invalidate();
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Price fetch failed: {ex.Message}");
             await DisplayAlertAsync("Ingen forbindelse", "Priserne kunne ikke hentes. Prøv igen senere.", "OK");

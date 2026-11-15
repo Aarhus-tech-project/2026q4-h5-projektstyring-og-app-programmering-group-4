@@ -8,8 +8,15 @@ namespace Elwise.Core.Scheduling;
 /// </summary>
 public static class CheapestWindowFinder
 {
-    private const int PeakStartHour = 17;
-    private const int PeakEndHour = 21;
+    /// <summary>
+    /// The first hour (Danish time) of the evening peak, when the dishwasher never runs.
+    /// </summary>
+    public const int PeakStartHour = 17;
+
+    /// <summary>
+    /// The hour (Danish time) when the evening peak ends.
+    /// </summary>
+    public const int PeakEndHour = 21;
 
     /// <summary>
     /// Finds the cheapest allowed window for a given duration.
