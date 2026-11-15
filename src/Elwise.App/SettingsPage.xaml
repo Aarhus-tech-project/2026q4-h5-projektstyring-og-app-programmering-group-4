@@ -3,26 +3,45 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:Elwise.App.ViewModels"
              x:Class="Elwise.App.SettingsPage"
-             x:DataType="vm:SettingsViewModel">
+             x:DataType="vm:SettingsViewModel"
+             Title="Indstillinger">
 
-    <VerticalStackLayout Padding="16" Spacing="12">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,8,24,32" Spacing="24">
 
-        <Label Text="Prisområde" FontAttributes="Bold" />
-        <Picker ItemsSource="{Binding Areas}" SelectedIndex="{Binding AreaIndex}" />
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Prisområde" Style="{StaticResource SectionTitle}" />
+                <Label Text="Prisen er forskellig øst og vest for Storebælt." Style="{StaticResource MutedText}" />
+                <Picker ItemsSource="{Binding Areas}" SelectedIndex="{Binding AreaIndex}" />
+            </VerticalStackLayout>
 
-        <Label Text="Opvasken må køre" FontAttributes="Bold" Margin="0,12,0,0" />
-        <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="8">
-            <Label Text="Fra" VerticalOptions="Center" />
-            <Picker Grid.Column="1" ItemsSource="{Binding FromHours}" SelectedIndex="{Binding FromHourIndex}" />
-            <Label Grid.Column="2" Text="til" VerticalOptions="Center" />
-            <Picker Grid.Column="3" ItemsSource="{Binding ToHours}" SelectedIndex="{Binding ToHourIndex}" />
-        </Grid>
+            <BoxView Style="{StaticResource Divider}" />
 
-        <Label Text="Programmets længde" FontAttributes="Bold" Margin="0,12,0,0" />
-        <Picker ItemsSource="{Binding Durations}" SelectedIndex="{Binding DurationIndex}" />
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Opvasken må køre" Style="{StaticResource SectionTitle}" />
+                <Label Text="Appen foreslår kun tider inden for dette tidsrum." Style="{StaticResource MutedText}" />
+                <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="12">
+                    <Label Text="Fra" VerticalOptions="Center" />
+                    <Picker Grid.Column="1" ItemsSource="{Binding FromHours}" SelectedIndex="{Binding FromHourIndex}" />
+                    <Label Grid.Column="2" Text="til" VerticalOptions="Center" />
+                    <Picker Grid.Column="3" ItemsSource="{Binding ToHours}" SelectedIndex="{Binding ToHourIndex}" />
+                </Grid>
+            </VerticalStackLayout>
 
-        <Label Text="Appen foreslår aldrig kl. 17–21." FontSize="13" Margin="0,12,0,0" />
+            <BoxView Style="{StaticResource Divider}" />
 
-    </VerticalStackLayout>
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Programmets længde" Style="{StaticResource SectionTitle}" />
+                <Label Text="Hvor længe dit opvaskeprogram kører." Style="{StaticResource MutedText}" />
+                <Picker ItemsSource="{Binding Durations}" SelectedIndex="{Binding DurationIndex}" />
+            </VerticalStackLayout>
+
+            <BoxView Style="{StaticResource Divider}" />
+
+            <Label Text="Appen foreslår aldrig kl. 17–21, hvor elnettet er mest belastet. Indstillingerne gemmes kun på telefonen."
+                   Style="{StaticResource MutedText}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
 
 </ContentPage>

@@ -17,9 +17,9 @@ public static class MauiProgram
             .UseLocalNotification()
             .ConfigureFonts(fonts =>
             {
-				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-			});
+                fonts.AddFont("SchibstedGrotesk-Regular.ttf", "TextRegular");
+                fonts.AddFont("SchibstedGrotesk-Bold.ttf", "TextBold");
+            });
 
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddSingleton<EnergiDataServiceClient>();
