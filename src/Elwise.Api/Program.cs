@@ -1,28 +1,30 @@
 using Elwise.Api.Data;
 using Elwise.Api.Prices;
+using Elwise.Api.Security;
 using Elwise.Core.Prices;
 using Elwise.Infrastructure.EnergiDataService;
 using Microsoft.EntityFrameworkCore;
 
+if (args.Length == 2 && args[0] == "hash")
+{
+    Console.WriteLine(AdminPassword.Hash(args[1]));
+    return;
+}
 var builder = WebApplication.CreateBuilder(args);
+
 
 builder.Services.AddOpenApi();
 
-
-// The database is one SQLite file. The file name is in appsettings.json.
 builder.Services.AddDbContext<ElwiseDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Elwise")));
 
-// The server gets missing prices from Energi Data Service with the same client as the app.
 builder.Services.AddHttpClient<EnergiDataServiceClient>();
 builder.Services.AddScoped<PriceStore>(services => new PriceStore(
     services.GetRequiredService<ElwiseDbContext>(),
     services.GetRequiredService<EnergiDataServiceClient>()));
 
-
 var app = builder.Build();
 
-// Creates the database file and the Prices table the first time the server starts.
 using (IServiceScope scope = app.Services.CreateScope())
 {
     scope.ServiceProvider.GetRequiredService<ElwiseDbContext>().Database.EnsureCreated();
@@ -33,6 +35,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
 else
 {
     app.UseHsts();
@@ -40,7 +43,6 @@ else
 
 app.UseHttpsRedirection();
 
-// Example: GET /api/prices?area=DK1&firstDay=2026-11-18&dayCount=2
 app.MapGet("/api/prices", async (
     PriceArea area,
     DateOnly firstDay,
@@ -56,8 +58,25 @@ app.MapGet("/api/prices", async (
     IReadOnlyList<PricePoint> prices =
         await store.GetPricesAsync(area, firstDay, dayCount, cancellationToken);
 
-
     return Results.Ok(prices);
 });
 
+app.MapDelete("/api/admin/prices", async (
+    HttpRequest request,
+    IConfiguration configuration,
+    PriceStore store,
+    CancellationToken cancellationToken) =>
+{
+    string? password = request.Headers["X-Admin-Password"];
+    string? savedHash = configuration["Admin:PasswordHash"];
+
+    if (password is null || savedHash is null || !AdminPassword.Verify(password, savedHash))
+    {
+        return Results.Unauthorized();
+    }
+
+    int deleted = await store.DeleteAllAsync(cancellationToken);
+
+    return Results.Ok(new { deleted });
+});
 app.Run();

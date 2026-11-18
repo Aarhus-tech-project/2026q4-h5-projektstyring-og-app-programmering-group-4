@@ -4,6 +4,7 @@ using Elwise.Core.Time;
 using Microsoft.EntityFrameworkCore;
 
 namespace Elwise.Api.Prices;
+
 /// <summary>
 /// Gives prices from the database. If a day is missing, it first gets the prices
 /// from another price source (Energi Data Service) and saves them.
@@ -18,6 +19,7 @@ public sealed class PriceStore
         _db = db;
         _source = source;
     }
+
     /// <summary>
     /// Gets the 15-minute prices for one or more Danish days in a row, ordered by start time.
     /// </summary>
@@ -26,8 +28,6 @@ public sealed class PriceStore
         DateOnly firstDay,
         int dayCount,
         CancellationToken cancellationToken = default)
-   
-    
     {
         List<PricePoint> saved = await ReadAsync(area, firstDay, dayCount, cancellationToken);
 
@@ -43,7 +43,14 @@ public sealed class PriceStore
 
         return await ReadAsync(area, firstDay, dayCount, cancellationToken);
     }
-   private async Task<List<PricePoint>> ReadAsync(
+
+    /// <summary>
+    /// Deletes all saved prices. The next request gets them again from Energi Data Service.
+    /// </summary>
+    public Task<int> DeleteAllAsync(CancellationToken cancellationToken = default) =>
+        _db.Prices.ExecuteDeleteAsync(cancellationToken);
+
+    private async Task<List<PricePoint>> ReadAsync(
         PriceArea area,
         DateOnly firstDay,
         int dayCount,
@@ -60,9 +67,7 @@ public sealed class PriceStore
             .OrderBy(price => price.StartUtc)
             .ToListAsync(cancellationToken);
 
-        
         var prices = new List<PricePoint>();
-
 
         foreach (StoredPrice row in rows)
         {
@@ -87,6 +92,7 @@ public sealed class PriceStore
         {
             return;
         }
+
         DateTime first = fetched.Min(price => price.Start.UtcDateTime);
         DateTime last = fetched.Max(price => price.Start.UtcDateTime);
 
@@ -130,6 +136,7 @@ public sealed class PriceStore
 
         return true;
     }
+
     private static DateOnly DanishDay(DateTimeOffset time) =>
         DateOnly.FromDateTime(DanishTime.FromUtc(time).DateTime);
 }

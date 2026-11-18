@@ -13,3 +13,10 @@ GET {{Elwise.Api_HostAddress}}/api/prices?area=DK1&firstDay=2026-11-18&dayCount=
 Accept: application/json
 
 ###
+
+
+# Admin with a wrong password gives 401 Unauthorized
+DELETE {{Elwise.Api_HostAddress}}/api/admin/prices
+X-Admin-Password: Xgt77vre91@
+
+###
