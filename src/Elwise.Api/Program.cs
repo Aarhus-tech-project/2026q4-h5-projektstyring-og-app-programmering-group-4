@@ -1,41 +1,63 @@
+using Elwise.Api.Data;
+using Elwise.Api.Prices;
+using Elwise.Core.Prices;
+using Elwise.Infrastructure.EnergiDataService;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+
+// The database is one SQLite file. The file name is in appsettings.json.
+builder.Services.AddDbContext<ElwiseDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("Elwise")));
+
+// The server gets missing prices from Energi Data Service with the same client as the app.
+builder.Services.AddHttpClient<EnergiDataServiceClient>();
+builder.Services.AddScoped<PriceStore>(services => new PriceStore(
+    services.GetRequiredService<ElwiseDbContext>(),
+    services.GetRequiredService<EnergiDataServiceClient>()));
+
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Creates the database file and the Prices table the first time the server starts.
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<ElwiseDbContext>().Database.EnsureCreated();
+}
+
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+else
+{
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+// Example: GET /api/prices?area=DK1&firstDay=2026-11-18&dayCount=2
+app.MapGet("/api/prices", async (
+    PriceArea area,
+    DateOnly firstDay,
+    int dayCount,
+    PriceStore store,
+    CancellationToken cancellationToken) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    if (dayCount is < 1 or > 2)
+    {
+        return Results.BadRequest("dayCount must be 1 or 2.");
+    }
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    IReadOnlyList<PricePoint> prices =
+        await store.GetPricesAsync(area, firstDay, dayCount, cancellationToken);
+
+
+    return Results.Ok(prices);
+});
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
