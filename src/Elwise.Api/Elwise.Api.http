@@ -1,6 +1,22 @@
-@Elwise.Api_HostAddress = http://localhost:5264
+@Elwise.Api_HostAddress = https://localhost:7140
 
-GET {{Elwise.Api_HostAddress}}/weatherforecast/
+# Prices for two Danish days in DK1.
+# The first time, the server gets them from Energi Data Service and saves them.
+# The next time, they come from the database.
+GET {{Elwise.Api_HostAddress}}/api/prices?area=DK1&firstDay=2026-11-18&dayCount=1
 Accept: application/json
+
+###
+
+# Wrong input gives 400 Bad Request
+GET {{Elwise.Api_HostAddress}}/api/prices?area=DK1&firstDay=2026-11-18&dayCount=5
+Accept: application/json
+
+###
+
+
+# Admin with a wrong password gives 401 Unauthorized
+DELETE {{Elwise.Api_HostAddress}}/api/admin/prices
+X-Admin-Password: Xgt77vre91@
 
 ###

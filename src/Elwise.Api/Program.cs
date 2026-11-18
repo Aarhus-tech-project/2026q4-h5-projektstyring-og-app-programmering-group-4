@@ -1,41 +1,82 @@
+using Elwise.Api.Data;
+using Elwise.Api.Prices;
+using Elwise.Api.Security;
+using Elwise.Core.Prices;
+using Elwise.Infrastructure.EnergiDataService;
+using Microsoft.EntityFrameworkCore;
+
+if (args.Length == 2 && args[0] == "hash")
+{
+    Console.WriteLine(AdminPassword.Hash(args[1]));
+    return;
+}
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
+
+builder.Services.AddDbContext<ElwiseDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("Elwise")));
+
+builder.Services.AddHttpClient<EnergiDataServiceClient>();
+builder.Services.AddScoped<PriceStore>(services => new PriceStore(
+    services.GetRequiredService<ElwiseDbContext>(),
+    services.GetRequiredService<EnergiDataServiceClient>()));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<ElwiseDbContext>().Database.EnsureCreated();
+}
+
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
+else
+{
+    app.UseHsts();
+}
+
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/api/prices", async (
+    PriceArea area,
+    DateOnly firstDay,
+    int dayCount,
+    PriceStore store,
+    CancellationToken cancellationToken) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    if (dayCount is < 1 or > 2)
+    {
+        return Results.BadRequest("dayCount must be 1 or 2.");
+    }
 
-app.MapGet("/weatherforecast", () =>
+    IReadOnlyList<PricePoint> prices =
+        await store.GetPricesAsync(area, firstDay, dayCount, cancellationToken);
+
+    return Results.Ok(prices);
+});
+
+app.MapDelete("/api/admin/prices", async (
+    HttpRequest request,
+    IConfiguration configuration,
+    PriceStore store,
+    CancellationToken cancellationToken) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    string? password = request.Headers["X-Admin-Password"];
+    string? savedHash = configuration["Admin:PasswordHash"];
 
+    if (password is null || savedHash is null || !AdminPassword.Verify(password, savedHash))
+    {
+        return Results.Unauthorized();
+    }
+
+    int deleted = await store.DeleteAllAsync(cancellationToken);
+
+    return Results.Ok(new { deleted });
+});
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
