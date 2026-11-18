@@ -10,8 +10,8 @@ if (args.Length == 2 && args[0] == "hash")
     Console.WriteLine(AdminPassword.Hash(args[1]));
     return;
 }
-var builder = WebApplication.CreateBuilder(args);
 
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
@@ -30,12 +30,10 @@ using (IServiceScope scope = app.Services.CreateScope())
     scope.ServiceProvider.GetRequiredService<ElwiseDbContext>().Database.EnsureCreated();
 }
 
-
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
 else
 {
     app.UseHsts();
@@ -79,4 +77,5 @@ app.MapDelete("/api/admin/prices", async (
 
     return Results.Ok(new { deleted });
 });
+
 app.Run();
